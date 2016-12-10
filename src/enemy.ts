@@ -8,11 +8,16 @@ export class Enemy {
     public texture: gamesaw.GL.Texture;
     public baseSprite: gamesaw.GL.Sprite;
     public dirSprite: gamesaw.GL.Sprite;
+    public health: number = 5;
+    public armor: number = 0;
+    public damage: number = 2;
+    public worth: number = 100;
+    public dead: boolean = false;
 
     public direction: gamesaw.Geometry.Vector2;
-    public speed: number = 0.15;
-    public fireTimeout: number;
-    public msBetweenRounds: 1000;
+    public speed: number = 0.10;
+    public fireTimeout: number = 0;
+    public msBetweenRounds: number = 1000;
 
     public projectiles: Projectile[] = [];
 
@@ -33,7 +38,7 @@ export class Enemy {
 
         if (this.fireTimeout > this.msBetweenRounds) {
             this.fireTimeout = 0;
-            this.projectiles.push(new Projectile(this.gl, this.texture, new gamesaw.Geometry.Circle(this.collider.pos.x, this.collider.pos.y, 3), 0.6, this.direction.copy()));
+            this.projectiles.push(new Projectile(this.gl, this.texture, new gamesaw.Geometry.Circle(this.collider.pos.x, this.collider.pos.y, 3), 0.6, this.damage, this.direction.copy()));
         }
 
         for (let i in this.projectiles) {
@@ -60,6 +65,22 @@ export class Enemy {
 
     public getCollider(): gamesaw.Geometry.Circle {
         return this.collider;
+    }
+
+    public getWorth(): number {
+        return this.worth;
+    }
+
+    public doDamage(damage: number): void {
+        this.health -= damage;
+
+        if (this.health < 0) {
+            this.dead = true;
+        }
+    }
+
+    public isDead(): boolean {
+        return this.dead;
     }
 
     private seek(playerPosition: gamesaw.Geometry.Vector2): gamesaw.Geometry.Vector2 {

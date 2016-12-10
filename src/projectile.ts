@@ -6,14 +6,16 @@ export class Projectile {
     private sprite: gamesaw.GL.Sprite;
     public collider: gamesaw.Geometry.Circle;
     public speed: number;
+    public damage: number;
     public direction: gamesaw.Geometry.Vector2;
     public dead: boolean = false;
 
-    constructor(gl: WebGLRenderingContext, texture: gamesaw.GL.Texture, collider: gamesaw.Geometry.Circle, speed: number, direction: gamesaw.Geometry.Vector2) {
+    constructor(gl: WebGLRenderingContext, texture: gamesaw.GL.Texture, collider: gamesaw.Geometry.Circle, speed: number, damage: number, direction: gamesaw.Geometry.Vector2) {
         this.texture = texture;
         this.sprite = new gamesaw.GL.Sprite(texture, 6, 6, [406, 22, 6, 6]);
         this.collider = collider;
         this.speed = speed;
+        this.damage = damage;
         this.direction = direction;
     }
 

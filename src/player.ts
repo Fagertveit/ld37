@@ -10,6 +10,13 @@ export class Player {
     private mouse: gamesaw.Input.Mouse;
     private keyboard: gamesaw.Input.Keyboard;
 
+    public health: number = 100;
+    public maxHealth: number = 100;
+    public armor: number = 50;
+    public maxArmor: number = 100;
+    public damage: number = 5;
+    public score: number = 0;
+
     public direction: gamesaw.Geometry.Vector2;
     public speed: number = 0.2;
 
@@ -58,6 +65,18 @@ export class Player {
         return this.collider;
     }
 
+    public addScore(score: number): void {
+        this.score += score;
+    }
+
+    public getScore(): string {
+        return this.score.toString();
+    }
+
+    public doDamage(damage: number): void {
+        this.health -= damage;
+    }
+
     private calculateDirection(): void {
         let mouseVector: gamesaw.Geometry.Vector2 = new gamesaw.Geometry.Vector2(this.mouse.x, this.mouse.y);
         let positionVector: gamesaw.Geometry.Vector2 = new gamesaw.Geometry.Vector2(this.collider.pos.x, this.collider.pos.y);
@@ -86,7 +105,7 @@ export class Player {
         }
 
         if (this.mouse.button[0]) {
-            this.projectiles.push(new Projectile(this.gl, this.texture, new gamesaw.Geometry.Circle(this.collider.pos.x, this.collider.pos.y, 3), 0.6, this.direction.copy()));
+            this.projectiles.push(new Projectile(this.gl, this.texture, new gamesaw.Geometry.Circle(this.collider.pos.x, this.collider.pos.y, 3), 0.6, this.damage, this.direction.copy()));
             this.mouse.button[0] = false;
         }
 
@@ -98,6 +117,22 @@ export class Player {
 
         direction = direction.scale(this.speed * delta);
         position = position.add(direction);
+
+        if (position.y > 530) {
+            position.y = 530;
+        }
+
+        if (position.y < 140) {
+            position.y = 140;
+        }
+
+        if (position.x < 80) {
+            position.x = 80;
+        }
+
+        if (position.x > 720) {
+            position.x = 720;
+        }
 
         this.collider.setX(position.x);
         this.collider.setY(position.y);
