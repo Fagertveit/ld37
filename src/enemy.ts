@@ -1,36 +1,40 @@
 import * as gamesaw from '../../gamesaw-ts/src/index';
 import { Projectile } from './projectile';
+import { Player } from './player';
 
-export class Player {
+export class Enemy {
     private gl: WebGLRenderingContext;
     public collider: gamesaw.Geometry.Circle;
     public texture: gamesaw.GL.Texture;
     public baseSprite: gamesaw.GL.Sprite;
     public dirSprite: gamesaw.GL.Sprite;
-    private mouse: gamesaw.Input.Mouse;
-    private keyboard: gamesaw.Input.Keyboard;
 
     public direction: gamesaw.Geometry.Vector2;
-    public speed: number = 0.2;
+    public speed: number = 0.15;
+    public fireTimeout: number;
+    public msBetweenRounds: 1000;
 
     public projectiles: Projectile[] = [];
 
-    constructor(gl: WebGLRenderingContext, texture: gamesaw.GL.Texture) {
+    constructor(gl: WebGLRenderingContext, texture: gamesaw.GL.Texture, collider: gamesaw.Geometry.Circle) {
         this.gl = gl;
         this.texture = texture;
-        this.collider = new gamesaw.Geometry.Circle(400, 300, 16);
-        this.baseSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [416, 0, 16, 16]);
+        this.collider = collider;
+        this.baseSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [400, 0, 16, 16]);
         this.dirSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [416, 16, 16, 16]);
         this.direction = new gamesaw.Geometry.Vector2(0.0, 0.0);
-
-        this.mouse = gamesaw.Input.Mouse.getInstance();
-        this.keyboard = gamesaw.Input.Keyboard.getInstance();
     }
 
-    public update(delta: number): void {
-        this.calculateDirection();
+    public update(delta: number, player: Player): void {
+        this.direction = this.seek(new gamesaw.Geometry.Vector2(player.collider.pos.x, player.collider.pos.y));
+        this.updateMovement(this.direction, delta);
 
-        this.updateMovement(this.handleInput(), delta);
+        this.fireTimeout += delta;
+
+        if (this.fireTimeout > this.msBetweenRounds) {
+            this.fireTimeout = 0;
+            this.projectiles.push(new Projectile(this.gl, this.texture, new gamesaw.Geometry.Circle(this.collider.pos.x, this.collider.pos.y, 3), 0.6, this.direction.copy()));
+        }
 
         for (let i in this.projectiles) {
             this.projectiles[+i].update(delta);
@@ -58,39 +62,10 @@ export class Player {
         return this.collider;
     }
 
-    private calculateDirection(): void {
-        let mouseVector: gamesaw.Geometry.Vector2 = new gamesaw.Geometry.Vector2(this.mouse.x, this.mouse.y);
+    private seek(playerPosition: gamesaw.Geometry.Vector2): gamesaw.Geometry.Vector2 {
         let positionVector: gamesaw.Geometry.Vector2 = new gamesaw.Geometry.Vector2(this.collider.pos.x, this.collider.pos.y);
 
-        this.direction = mouseVector.sub(positionVector).normalize();
-    }
-
-    private handleInput(): gamesaw.Geometry.Vector2 {
-        let key = gamesaw.Input.Key;
-        let directionVector: gamesaw.Geometry.Vector2 = new gamesaw.Geometry.Vector2(0.0, 0.0);
-
-        if (this.keyboard.keys[key['W']]) {
-            directionVector = directionVector.add(new gamesaw.Geometry.Vector2(0.0, -1.0));
-        }
-
-        if (this.keyboard.keys[key['A']]) {
-            directionVector = directionVector.add(new gamesaw.Geometry.Vector2(-1.0, 0.0));
-        }
-
-        if (this.keyboard.keys[key['S']]) {
-            directionVector = directionVector.add(new gamesaw.Geometry.Vector2(0.0, 1.0));
-        }
-
-        if (this.keyboard.keys[key['D']]) {
-            directionVector = directionVector.add(new gamesaw.Geometry.Vector2(1.0, 0.0));
-        }
-
-        if (this.mouse.button[0]) {
-            this.projectiles.push(new Projectile(this.gl, this.texture, new gamesaw.Geometry.Circle(this.collider.pos.x, this.collider.pos.y, 3), 0.6, this.direction.copy()));
-            this.mouse.button[0] = false;
-        }
-
-        return directionVector.normalize();
+        return playerPosition.sub(positionVector).normalize();
     }
 
     private updateMovement(direction: gamesaw.Geometry.Vector2, delta: number): void {

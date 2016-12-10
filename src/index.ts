@@ -1,5 +1,7 @@
 import * as gamesaw from '../../gamesaw-ts/src/index';
 import { Player } from './player';
+import { Enemy } from './enemy';
+import { Projectile } from './projectile';
 
 export class Game {
     private gl: WebGLRenderingContext;
@@ -14,6 +16,7 @@ export class Game {
     public texture: gamesaw.GL.Texture;
     public backgroundSprite: gamesaw.GL.Sprite;
     public player: Player;
+    public enemies: Enemy[] = [];
 
     constructor() {
         let that = this;
@@ -44,12 +47,16 @@ export class Game {
         this.backgroundSprite = new gamesaw.GL.Sprite(this.texture, 400, 300, [0, 0, 400, 300]);
 
         this.player = new Player(this.gl, this.texture);
+        this.enemies.push(new Enemy(this.gl, this.texture, new gamesaw.Geometry.Circle(50, 50, 16)));
 
         this.application.init();
     }
 
     public update(delta: number) {
         this.player.update(delta);
+        this.enemies[0].update(delta, this.player);
+
+        this.checkProjectileCollision();
     }
 
     public render(delta: number) {
@@ -57,7 +64,23 @@ export class Game {
 
         this.backgroundSprite.renderScale(this.renderer, 0, 0, 2);
         this.player.render(this.renderer);
+        this.enemies[0].render(this.renderer);
 
         this.renderer.execute();
+    }
+
+    public checkProjectileCollision(): void {
+        let playerProjectiles: Projectile[] = this.player.getProjectiles();
+        let playerCollider = this.player.getCollider();
+
+        for (let i in playerProjectiles) {
+            for (let e in this.enemies) {
+                let enemyCollider = this.enemies[+e].getCollider();
+
+                if (gamesaw.Geometry.intersects(playerProjectiles[+i].collider, enemyCollider)) {
+                    playerProjectiles[+i].dead = true;
+                }
+            }
+        }
     }
 }
