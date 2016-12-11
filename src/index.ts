@@ -29,10 +29,13 @@ export class Game {
     public armorSprite: gamesaw.GL.Sprite;
     public player: Player;
     public enemies: Enemy[] = [];
-    public paused: boolean = false;
+    public splatter: gamesaw.Geometry.Point[] = [];
+    public paused: boolean = true;
     public showGameover: boolean = false;
+    public showStartGame: boolean = true;
 
     public killCount: number = 0;
+    public startTimeout: number = 0;
 
     public gameoverSprite: gamesaw.GL.Sprite;
 
@@ -42,6 +45,7 @@ export class Game {
     public spawnTime: number = 10000;
 
     public spawnSprites: gamesaw.GL.Sprite[] = [];
+    public splatterSprite: gamesaw.GL.Sprite;
 
     // Enemy spawn
     public enemyPoints: gamesaw.Geometry.Point[] = [
@@ -84,13 +88,16 @@ export class Game {
         this.healthSprite = new gamesaw.GL.Sprite(this.texture, 7, 7, [432, 0, 7, 7]);
         this.armorSprite = new gamesaw.GL.Sprite(this.texture, 7, 7, [440, 0, 7, 7]);
         this.gameoverSprite = new gamesaw.GL.Sprite(this.texture, 160, 96, [0, 304, 160, 96]);
+        this.splatterSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [432, 16, 16, 16]);
 
         this.spawnSprites = [
-            new gamesaw.GL.Sprite(this.texture, 32, 16, [448, 16, 32, 16]), // Shotgun
-            new gamesaw.GL.Sprite(this.texture, 32, 16, [448, 0, 32, 16]), // Minigun
-            new gamesaw.GL.Sprite(this.texture, 16, 16, [480, 0, 16, 16]), // Healthpack
-            new gamesaw.GL.Sprite(this.texture, 16, 16, [480, 16, 16, 16]), // Speedboost
-            new gamesaw.GL.Sprite(this.texture, 16, 16, [496, 16, 16, 16]) // Quad damage
+            new gamesaw.GL.Sprite(this.texture, 32, 16, [400, 64, 32, 16]), // Shotgun
+            new gamesaw.GL.Sprite(this.texture, 32, 16, [400, 48, 32, 16]), // Minigun
+            new gamesaw.GL.Sprite(this.texture, 16, 16, [400, 32, 16, 16]), // Healthpack Mini
+            new gamesaw.GL.Sprite(this.texture, 16, 16, [416, 32, 16, 16]), // Healthpack Med
+            new gamesaw.GL.Sprite(this.texture, 16, 16, [432, 32, 16, 16]), // Healthpack Max
+            new gamesaw.GL.Sprite(this.texture, 16, 16, [448, 32, 16, 16]), // Speedboost
+            new gamesaw.GL.Sprite(this.texture, 16, 16, [464, 32, 16, 16]) // Quad damage
         ];
 
         this.fontRenderer = new gamesaw.GL.Font.FontRenderer(this.gl);
@@ -131,12 +138,22 @@ export class Game {
             if (this.player.health < 0) {
                 this.paused = true;
                 this.showGameover = true;
+                this.startTimeout = 1000;
             }
         }
 
         if (this.showGameover) {
-            if (this.mouse.button[0]) {
+            this.startTimeout -= delta;
+
+            if (this.mouse.button[0] && this.startTimeout < 0) {
                 this.resetGame();
+            }
+        }
+
+        if (this.showStartGame) {
+            if (this.mouse.button[0]) {
+                this.showStartGame = false;
+                this.paused = false;
             }
         }
     }
@@ -145,6 +162,11 @@ export class Game {
         this.scene.clear('main');
 
         this.backgroundSprite.renderScale(this.renderer, 0, 0, 2);
+
+        for (let gore of this.splatter) {
+            this.splatterSprite.renderScale(this.renderer, gore.x, gore.y, 2);
+        }
+
         this.player.render(this.renderer);
 
         for (let e in this.enemies) {
@@ -181,15 +203,19 @@ export class Game {
         this.armorSprite.renderScale(this.renderer, 450, 38, 2);
 
         this.font.align = 2;
-        this.font.drawString(this.fontRenderer, this.player.getScore(), 770, 18);
+        this.font.drawString(this.fontRenderer, this.player.getScore(), 770, 16);
 
         // 44, 6
         this.font.align = 1;
-        this.font.drawString(this.fontRenderer, this.killCount.toString(), 88, 10);
+        this.font.drawString(this.fontRenderer, this.killCount.toString(), 88, 8);
         // 180, 7
         this.font.drawString(this.fontRenderer, this.player.getAmmo(), 360, 10);
 
         if (this.showGameover) {
+            this.gameoverSprite.renderScale(this.renderer, 240, 176, 2);
+        }
+
+        if (this.showStartGame) {
             this.gameoverSprite.renderScale(this.renderer, 240, 176, 2);
         }
     }
@@ -214,15 +240,19 @@ export class Game {
 
                 switch (powerupType) {
                     case 0:
-                    case 1:
-                    case 2:
                     sprite = this.spawnSprites[2];
                     break;
-                    case 3:
+                    case 1:
                     sprite = this.spawnSprites[3];
                     break;
-                    case 4:
+                    case 2:
                     sprite = this.spawnSprites[4];
+                    break;
+                    case 3:
+                    sprite = this.spawnSprites[5];
+                    break;
+                    case 4:
+                    sprite = this.spawnSprites[6];
                     break;
                     case 5:
                     sprite = this.spawnSprites[2];
@@ -240,6 +270,7 @@ export class Game {
             if (this.enemies[+e].isDead()) {
                 this.killCount += 1;
                 this.player.addScore(this.enemies[+e].getWorth());
+                this.splatter.push(new gamesaw.Geometry.Point(this.enemies[+e].collider.pos.x - 16, this.enemies[+e].collider.pos.y - 16));
                 this.enemies.splice(+e, 1);
             }
         }
@@ -284,6 +315,7 @@ export class Game {
         this.player = new Player(this.gl, this.texture);
         this.spawns = [];
         this.enemies = [];
+        this.splatter = [];
         this.killCount = 0;
         this.spawnTimeout = 0;
         this.enemyTimeout = 0;

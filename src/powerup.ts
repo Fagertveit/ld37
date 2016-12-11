@@ -52,7 +52,7 @@ export class Powerup {
     }
 
     public render(renderer: gamesaw.GL.Render2d.Renderer2d): void {
-        this.sprite.renderScale(renderer, 148, 10, 2);
+        this.sprite.renderScale(renderer, 143, 10, 2);
     }
 
     public isActive(): boolean {

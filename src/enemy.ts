@@ -52,8 +52,8 @@ export class Enemy {
     }
 
     public render(renderer: gamesaw.GL.Render2d.Renderer2d): void {
-        this.baseSprite.renderScale(renderer, this.collider.pos.x - this.collider.radius, this.collider.pos.y - this.collider.radius, 2);
-        this.dirSprite.renderAngleScale(renderer, this.collider.pos.x - this.collider.radius, this.collider.pos.y - this.collider.radius, gamesaw.Utility.radianToDegree(this.direction.angle()), 2);
+        // this.baseSprite.renderScale(renderer, this.collider.pos.x - this.collider.radius, this.collider.pos.y - this.collider.radius, 2);
+        this.baseSprite.renderAngleScale(renderer, this.collider.pos.x - this.collider.radius, this.collider.pos.y - this.collider.radius, gamesaw.Utility.radianToDegree(this.direction.angle()), 2);
 
         for (let i in this.projectiles) {
             this.projectiles[+i].render(renderer);
