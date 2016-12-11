@@ -30,6 +30,11 @@ export class Game {
     public player: Player;
     public enemies: Enemy[] = [];
     public paused: boolean = false;
+    public showGameover: boolean = false;
+
+    public killCount: number = 0;
+
+    public gameoverSprite: gamesaw.GL.Sprite;
 
     // Powerup & Weapon spawn
     public spawns: Spawn[] = [];
@@ -78,6 +83,7 @@ export class Game {
         this.backgroundSprite = new gamesaw.GL.Sprite(this.texture, 400, 300, [0, 0, 400, 300]);
         this.healthSprite = new gamesaw.GL.Sprite(this.texture, 7, 7, [432, 0, 7, 7]);
         this.armorSprite = new gamesaw.GL.Sprite(this.texture, 7, 7, [440, 0, 7, 7]);
+        this.gameoverSprite = new gamesaw.GL.Sprite(this.texture, 160, 96, [0, 304, 160, 96]);
 
         this.spawnSprites = [
             new gamesaw.GL.Sprite(this.texture, 32, 16, [448, 16, 32, 16]), // Shotgun
@@ -91,7 +97,6 @@ export class Game {
         this.font = new gamesaw.GL.Font.Font(this.gl, '../assets/data/default.xml');
 
         this.player = new Player(this.gl, this.texture);
-        this.enemies.push(new Enemy(this.gl, this.texture, new gamesaw.Geometry.Circle(50, 50, 16)));
 
         this.application.init();
     }
@@ -122,6 +127,17 @@ export class Game {
             }
 
             this.checkProjectileCollision();
+
+            if (this.player.health < 0) {
+                this.paused = true;
+                this.showGameover = true;
+            }
+        }
+
+        if (this.showGameover) {
+            if (this.mouse.button[0]) {
+                this.resetGame();
+            }
         }
     }
 
@@ -150,6 +166,14 @@ export class Game {
         let healthWidth = 70 * (this.player.health / this.player.maxHealth);
         let armorWidth = 70 * (this.player.armor / this.player.maxArmor);
 
+        if (armorWidth < 0) {
+            armorWidth = 0;
+        }
+
+        if (healthWidth < 0) {
+            healthWidth = 0;
+        }
+
         this.healthSprite.width = healthWidth;
         this.armorSprite.width = armorWidth;
 
@@ -161,9 +185,13 @@ export class Game {
 
         // 44, 6
         this.font.align = 1;
-        this.font.drawString(this.fontRenderer, '0', 88, 10);
+        this.font.drawString(this.fontRenderer, this.killCount.toString(), 88, 10);
         // 180, 7
         this.font.drawString(this.fontRenderer, this.player.getAmmo(), 360, 10);
+
+        if (this.showGameover) {
+            this.gameoverSprite.renderScale(this.renderer, 240, 176, 2);
+        }
     }
 
     public updatePowerupWeaponSpawn(delta: number): void {
@@ -210,6 +238,7 @@ export class Game {
             this.enemies[+e].update(delta, this.player);
 
             if (this.enemies[+e].isDead()) {
+                this.killCount += 1;
                 this.player.addScore(this.enemies[+e].getWorth());
                 this.enemies.splice(+e, 1);
             }
@@ -249,5 +278,17 @@ export class Game {
                 }
             }
         }
+    }
+
+    public resetGame(): void {
+        this.player = new Player(this.gl, this.texture);
+        this.spawns = [];
+        this.enemies = [];
+        this.killCount = 0;
+        this.spawnTimeout = 0;
+        this.enemyTimeout = 0;
+
+        this.showGameover = false;
+        this.paused = false;
     }
 }

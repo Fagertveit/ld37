@@ -10,12 +10,12 @@ export class Enemy {
     public dirSprite: gamesaw.GL.Sprite;
     public health: number = 5;
     public armor: number = 0;
-    public damage: number = 2;
+    public damage: number = 10;
     public worth: number = 100;
     public dead: boolean = false;
 
     public direction: gamesaw.Geometry.Vector2;
-    public speed: number = 0.10;
+    public speed: number = 0.07;
     public fireTimeout: number = 0;
     public msBetweenRounds: number = 1000;
 
@@ -28,6 +28,7 @@ export class Enemy {
         this.baseSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [400, 0, 16, 16]);
         this.dirSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [416, 16, 16, 16]);
         this.direction = new gamesaw.Geometry.Vector2(0.0, 0.0);
+        this.msBetweenRounds = Math.random() * 1000 - 500 + 1000;
     }
 
     public update(delta: number, player: Player): void {
