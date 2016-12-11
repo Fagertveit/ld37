@@ -38,6 +38,7 @@ export class Game {
     public startTimeout: number = 0;
 
     public gameoverSprite: gamesaw.GL.Sprite;
+    public getPsychedSprite: gamesaw.GL.Sprite;
 
     // Powerup & Weapon spawn
     public spawns: Spawn[] = [];
@@ -87,7 +88,8 @@ export class Game {
         this.backgroundSprite = new gamesaw.GL.Sprite(this.texture, 400, 300, [0, 0, 400, 300]);
         this.healthSprite = new gamesaw.GL.Sprite(this.texture, 7, 7, [432, 0, 7, 7]);
         this.armorSprite = new gamesaw.GL.Sprite(this.texture, 7, 7, [440, 0, 7, 7]);
-        this.gameoverSprite = new gamesaw.GL.Sprite(this.texture, 160, 96, [0, 304, 160, 96]);
+        this.gameoverSprite = new gamesaw.GL.Sprite(this.texture, 160, 32, [0, 304, 160, 32]);
+        this.getPsychedSprite = new gamesaw.GL.Sprite(this.texture, 160, 32, [0, 340, 160, 32]);
         this.splatterSprite = new gamesaw.GL.Sprite(this.texture, 16, 16, [432, 16, 16, 16]);
 
         this.spawnSprites = [
@@ -216,7 +218,7 @@ export class Game {
         }
 
         if (this.showStartGame) {
-            this.gameoverSprite.renderScale(this.renderer, 240, 176, 2);
+            this.getPsychedSprite.renderScale(this.renderer, 240, 176, 2);
         }
     }
 
